@@ -22,6 +22,8 @@ class BuildExt(build_ext):
             ext.extra_compile_args = ["-std=c11", "-fvisibility=hidden"]
         else:
             ext.extra_compile_args = ["/std:c11", "/utf-8"]
+        if path.exists("src/scanner.c"):
+            ext.sources.append("src/scanner.c")
         if ext.py_limited_api:
             ext.define_macros.append(("Py_LIMITED_API", "0x030A0000"))
         super().build_extension(ext)
@@ -40,6 +42,7 @@ class EggInfo(egg_info):
         super().find_sources()
         self.filelist.recursive_include("queries", "*.scm")
         self.filelist.include("src/tree_sitter/*.h")
+        self.filelist.include("src/*.c")
 
 
 setup(
@@ -56,13 +59,12 @@ setup(
             sources=[
                 "bindings/python/tree_sitter_just/binding.c",
                 "src/parser.c",
-                "src/scanner.c",
             ],
             define_macros=[
                 ("PY_SSIZE_T_CLEAN", None),
                 ("TREE_SITTER_HIDE_SYMBOLS", None),
             ],
-            # The scanner requires assertions, but Python builds define NDEBUG.
+            # The scanner requires assertions, but Python defines NDEBUG.
             undef_macros=["NDEBUG"],
             include_dirs=["src"],
             py_limited_api=not get_config_var("Py_GIL_DISABLED"),
@@ -74,5 +76,5 @@ setup(
         "bdist_wheel": BdistWheel,
         "egg_info": EggInfo,
     },
-    zip_safe=False,
+    zip_safe=False
 )
